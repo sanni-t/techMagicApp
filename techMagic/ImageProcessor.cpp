@@ -46,6 +46,7 @@ std::vector<KeyPoint> ImageProcessor::wandDetect(ushort frameData[], int numPixe
 	// Storage for blobs
 	std::vector<KeyPoint> keypoints;
 	
+	//Copy frameData array to Mat
 	for (uint i = 0; i < numPixels; i++)
 	{
 		uint8_t thisPixelIntensity = (uint8_t)(frameData[i] >> 8);
@@ -55,6 +56,7 @@ std::vector<KeyPoint> ImageProcessor::wandDetect(ushort frameData[], int numPixe
 	if (cameraFrame.empty())
 		return keypoints;
 
+	//Background Elimination
 	_pMOG2->apply(cameraFrame, _fgMaskMOG2);
 	Mat bgSubtractedFrame;
 	cameraFrame.copyTo(bgSubtractedFrame, _fgMaskMOG2);
@@ -69,7 +71,7 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 {
 	std::vector<KeyPoint> keypoints = wandDetect(frameData, numpixels);
 
-
+	//Add keypoints to deque
 	for (int i = 0; i < keypoints.size(); i++)
 	{
 		if (i == 0)
@@ -79,11 +81,14 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 			tracePoints.push_back(keypoints[i]);
 		}
 	}
+	
+	//If no keypoints detected, start emptying the deque, one element at a time
 	if (keypoints.size() == 0 && tracePoints.size() > 0)
 	{
 		tracePoints.pop_front();
 	}
 
+	//Draw a trace by connecting all the keypoints stored in the deque
 	for (int i = 1; i < tracePoints.size(); i++)
 	{
 		if (tracePoints[i].size == -99.0)
@@ -96,3 +101,31 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 	return wandMoveTracingFrame;
 }
 
+Mat ImageProcessor::deskew(Mat& img)
+{
+	int SZ = 20;
+	float affineFlags = WARP_INVERSE_MAP | INTER_LINEAR;
+
+	Moments m = moments(img);
+	if (abs(m.mu02) < 1e-2)
+	{
+		//No deskewing needed
+		return img.clone();
+	}
+
+	//Calculate skew based on central moments
+	float skew = m.mu11 / m.mu02;
+
+	//Calculate affine transform to correct skewness
+	Mat warpMat = (Mat_<float>(2, 3) << 1, skew, -0.5*SZ*skew, 0, 1, 0);
+	Mat imgOut = Mat::zeros(img.rows, img.cols, img.type());
+	warpAffine(img, imgOut, warpMat, imgOut.size(), affineFlags);
+
+	return imgOut;
+
+}
+
+void ImageProcessor::wandGestureRecognitionTrainer()
+{
+
+}

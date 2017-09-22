@@ -12,6 +12,7 @@ using namespace std;
 #define DEQUE_BUFFER 32
 #define TRACE_THICKNESS 4
 #define BGS_HISTORY_FRAMES 250
+#define GESTURE_TRAINER_IMAGES_FOLDER "../TrainerImages/"
 
 class ImageProcessor
 {
@@ -30,8 +31,12 @@ private:
 	Mat wandMoveTracingFrame;
 	Mat cameraFrame;
 
+	Mat deskew(Mat& img);
+
 public:
 	void init(int frameWidth, int frameHeight);
 	Mat getWandTrace(ushort[], int _numpixels);
+
+	void wandGestureRecognitionTrainer();
 
 };

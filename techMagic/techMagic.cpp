@@ -17,16 +17,31 @@ int main()
 
 	m_imageProcessor.init(m_kinect.frameWidth, m_kinect.frameHeight);
 
+#if ENABLE_SAVE_IMAGE
+	int fileNum = 0;
+#endif
+
 	while (1)
 	{
 		Mat wandTraceFrame = m_imageProcessor.getWandTrace(m_kinect.grabLongIRFrame(), m_kinect.numPixels);
 		imshow(windowName, wandTraceFrame);
 
-		if (waitKey(10) == ESC_KEY)
+		int keyPressed = waitKey(10);
+
+		if (keyPressed == ESC_KEY)
 		{
 			cout << "Exiting";
 			break;
 		}
+#if ENABLE_SAVE_IMAGE
+		else if(keyPressed == SPACE_KEY)
+		{
+
+			String fileName = "Image" + to_string(fileNum) + ".png";
+			imwrite(fileName, wandTraceFrame);
+			fileNum++;
+		}
+#endif
 	}
 
 	m_kinect.close();
