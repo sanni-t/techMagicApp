@@ -23,9 +23,19 @@ int main()
 
 	while (1)
 	{
+		vector<KeyPoint> blobKeypoints;
+		int trailPointsDequeSize;
+		Point traceUpperCorner;
+		Point traceLowerCorner;
 		Mat wandTraceFrame = m_imageProcessor.getWandTrace(m_kinect.grabLongIRFrame(), m_kinect.numPixels);
+		
 		imshow(windowName, wandTraceFrame);
 
+		if(m_imageProcessor.checkTraceValidity())
+		{
+			cout << "Trace Valid" << endl;
+			m_imageProcessor.recognizeSpell();
+		}
 		int keyPressed = waitKey(10);
 
 		if (keyPressed == ESC_KEY)
