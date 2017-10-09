@@ -11,18 +11,6 @@ using namespace cv;
 using namespace cv::ml;
 using namespace std;
 
-#define DEQUE_BUFFER			32
-#define TRACE_THICKNESS			4
-#define BGS_HISTORY_FRAMES		250
-#define ENABLE_SAVE_IMAGE		true
-#define ENABLE_SPELL_TRAINING	true
-#define TRAINED_SPELL_MODEL		"spellsModel.yml"
-
-#if ENABLE_SPELL_TRAINING
-	#define GESTURE_TRAINER_IMAGE		"spellChars_64wide_grayscale.png"
-	#define TRAINER_IMAGE_WIN_SIZE		64
-	#define NO_OF_IMAGES_PER_ELEMENT	20
-#endif
 
 #define MIN_0_TRACE_AREA	7600	//for M
 #define MIN_1_TRACE_AREA	30000	//for 0
@@ -55,7 +43,6 @@ private:
 	HOGDescriptor hog;
 	vector<KeyPoint> wandDetect(ushort[], int _numpixels);
 	void ConvertVectortoMatrix(vector<float> inHOG, Mat &outMat);
-	int predictSpell(Mat spellImg);
 	Mat cropSaveTrace();
 	Mat deskew(Mat& img);
 

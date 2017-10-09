@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "config.h"
 #include"ImageProcessor.h" 
 
 void ImageProcessor::init(int width, int height)

@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\rmt_curl.7.51.0\build\native\rmt_curl.props" Condition="Exists('..\packages\rmt_curl.7.51.0\build\native\rmt_curl.props')" />
+  <Import Project="..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.props" Condition="Exists('..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.props')" />
+  <Import Project="..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.props" Condition="Exists('..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.props')" />
+  <Import Project="..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.props" Condition="Exists('..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -161,8 +165,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="httpService.h" />
     <ClInclude Include="ImageProcessor.h" />
     <ClInclude Include="KinectHandler.h" />
+    <ClInclude Include="Serial.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="techMagic.h" />
@@ -170,6 +177,7 @@
   <ItemGroup>
     <ClCompile Include="ImageProcessor.cpp" />
     <ClCompile Include="KinectHandler.cpp" />
+    <ClCompile Include="Serial.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -185,6 +193,10 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\opencv3.1.redist.1.0\build\native\opencv3.1.redist.targets" Condition="Exists('..\packages\opencv3.1.redist.1.0\build\native\opencv3.1.redist.targets')" />
     <Import Project="..\packages\opencv3.1.1.0\build\native\opencv3.1.targets" Condition="Exists('..\packages\opencv3.1.1.0\build\native\opencv3.1.targets')" />
+    <Import Project="..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.targets" Condition="Exists('..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.targets')" />
+    <Import Project="..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.targets" Condition="Exists('..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.targets')" />
+    <Import Project="..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.targets" Condition="Exists('..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.targets')" />
+    <Import Project="..\packages\rmt_curl.7.51.0\build\native\rmt_curl.targets" Condition="Exists('..\packages\rmt_curl.7.51.0\build\native\rmt_curl.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -192,5 +204,13 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\opencv3.1.redist.1.0\build\native\opencv3.1.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\opencv3.1.redist.1.0\build\native\opencv3.1.redist.targets'))" />
     <Error Condition="!Exists('..\packages\opencv3.1.1.0\build\native\opencv3.1.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\opencv3.1.1.0\build\native\opencv3.1.targets'))" />
+    <Error Condition="!Exists('..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.props'))" />
+    <Error Condition="!Exists('..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_zlib.1.2.8.7\build\native\rmt_zlib.targets'))" />
+    <Error Condition="!Exists('..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.props'))" />
+    <Error Condition="!Exists('..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_openssl.1.1.0.3\build\native\rmt_openssl.targets'))" />
+    <Error Condition="!Exists('..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.props'))" />
+    <Error Condition="!Exists('..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_libssh2.1.8.0.0\build\native\rmt_libssh2.targets'))" />
+    <Error Condition="!Exists('..\packages\rmt_curl.7.51.0\build\native\rmt_curl.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_curl.7.51.0\build\native\rmt_curl.props'))" />
+    <Error Condition="!Exists('..\packages\rmt_curl.7.51.0\build\native\rmt_curl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rmt_curl.7.51.0\build\native\rmt_curl.targets'))" />
   </Target>
 </Project>

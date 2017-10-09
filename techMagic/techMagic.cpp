@@ -23,6 +23,7 @@ int main()
 
 	while (1)
 	{
+#if !DEBUG
 		vector<KeyPoint> blobKeypoints;
 		int trailPointsDequeSize;
 		Point traceUpperCorner;
@@ -36,6 +37,8 @@ int main()
 			cout << "Trace Valid" << endl;
 			m_imageProcessor.recognizeSpell();
 		}
+#endif
+
 		int keyPressed = waitKey(10);
 
 		if (keyPressed == ESC_KEY)
@@ -43,8 +46,22 @@ int main()
 			cout << "Exiting";
 			break;
 		}
+		else if (keyPressed == SPACE_KEY)
+		{ 
+			if (hueLights.isOn())
+				hueLights.allOff();
+			else
+				hueLights.allOn();
+		}
+		else if (keyPressed == 's')
+		{
+			bool dataSent =serialPort->sendCommand(OPEN_BLINDS);
+			cout << "Bytes sent:" << dataSent << endl;
+		}
+#if !DEBUG
 #if ENABLE_SAVE_IMAGE
-		else if(keyPressed == SPACE_KEY)
+
+		else if(keyPressed == 'L')
 		{
 
 			String fileName = "Image" + to_string(fileNum) + ".png";
@@ -52,9 +69,11 @@ int main()
 			fileNum++;
 		}
 #endif
+#endif
 	}
-
+#if !DEBUG
 	m_kinect.close();
+#endif
 	destroyAllWindows();
 
 	return 0;

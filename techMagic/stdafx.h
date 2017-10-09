@@ -5,6 +5,14 @@
 
 #pragma once
 
+//#ifndef _WINDOWS_
+//#define WIN32_LEAN_AND_MEAN
+//#include<Windows.h>
+//#undef WIN32_LEAN_AND_MEAN
+//#endif
+
+#include <WinSock2.h>
+#include<Windows.h>
 #include "targetver.h"
 
 #include <stdio.h>
