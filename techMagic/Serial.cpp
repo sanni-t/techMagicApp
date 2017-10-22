@@ -76,11 +76,8 @@ bool Serial::sendCommand(SERIAL_CMD cmd)
 	bool dataSent;
 	switch (cmd)
 	{
-	case OPEN_BLINDS:
-		dataSent = WriteData("OPEN_BLINDS", 11);
-		break;
-	case CLOSE_BLINDS:
-		dataSent = WriteData("CLOSE_BLINDS", 12);
+	case FLIP_BLINDS:
+		dataSent = WriteData("FLIP_BLINDS", 11);
 		break;
 	case LOCOMOTOR_BOT:
 		dataSent = WriteData("LOCOMOTOR_BOT", 13);

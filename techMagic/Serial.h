@@ -1,4 +1,5 @@
 #pragma once
+/*	Contains Serial communication code from https://playground.arduino.cc/Interfacing/CPPWindows	*/
 
 class Serial
 {
