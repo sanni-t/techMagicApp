@@ -1,3 +1,6 @@
+//Reads frame data from Kinect's Long exposure IR camera 
+//to be sent to ImageProcessor
+
 #include "stdafx.h"
 #include"KinectHandler.h"
 

@@ -1,3 +1,8 @@
+//Used for interfacing with the Serial Port
+//Sends spells commands to the Simblee breakout board connected to Serial
+//This Simblee broadcasts to the remote Simblee boards on it's COM wireless channel
+//Used to FLIP_BLINDS and LOCOMOTR/IMMOBLUS my robot
+
 #include "stdafx.h"
 #include "config.h"
 #include "Serial.h"

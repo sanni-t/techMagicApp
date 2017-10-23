@@ -1,5 +1,4 @@
 // techMagic.cpp : Defines the entry point for the console application.
-//
 
 #include "stdafx.h"
 #include "techMagic.h"
@@ -8,7 +7,7 @@
 int main()
 {
 	namedWindow(windowName, CV_WINDOW_AUTOSIZE);
-
+	
 	if (FAILED(m_kinect.init()))
 	{
 		cout << "Failed to initialize Kinect";
@@ -35,7 +34,23 @@ int main()
 		if(m_imageProcessor.checkTraceValidity())
 		{
 			cout << "Trace Valid" << endl;
-			m_imageProcessor.recognizeSpell();
+			switch (m_imageProcessor.recognizeSpell())
+			{
+			case 0:
+				musicToggle();
+				break;
+			case 1:
+				blindsToggle();
+				break;
+			case 2:
+				botToggle();
+				break;
+			case 3:
+				lightsToggle();
+				break;
+			default:
+				cout << "That's not a spell" << endl;
+			}
 		}
 #endif
 
@@ -46,24 +61,29 @@ int main()
 			cout << "Exiting";
 			break;
 		}
-		else if (keyPressed == SPACE_KEY)
+
+#if DEBUG
+		else if (keyPressed == 'l' || keyPressed == 'L')
 		{ 
-			if (hueLights.isOn())
-				hueLights.allOff();
-			else
-				hueLights.allOn();
+			lightsToggle();
 		}
-		else if (keyPressed == 's')
+		else if (keyPressed == 'b' || keyPressed == 'B')
 		{
-			bool dataSent =serialPort->sendCommand(OPEN_BLINDS);
-			cout << "Bytes sent:" << dataSent << endl;
+			blindsToggle();
 		}
-#if !DEBUG
+		else if (keyPressed == 'm' || keyPressed == 'M')
+		{
+			musicToggle();
+		}
+		else if (keyPressed == 't' || keyPressed == 'T')
+		{
+			botToggle();
+		}
+#else
 #if ENABLE_SAVE_IMAGE
 
 		else if(keyPressed == 'L')
 		{
-
 			String fileName = "Image" + to_string(fileNum) + ".png";
 			imwrite(fileName, wandTraceFrame);
 			fileNum++;
@@ -79,3 +99,32 @@ int main()
 	return 0;
 }
 
+void lightsToggle() {
+	if (hueLights.isOn())
+		hueLights.allOff();
+	else
+		hueLights.allOn();
+}
+
+void blindsToggle()
+{
+	bool dataSent =	serialPort->sendCommand(FLIP_BLINDS);
+	cout << "Bytes sent:" << dataSent << endl;
+}
+
+void botToggle()
+{
+	bool dataSent = serialPort->sendCommand(LOCOMOTOR_BOT);
+}
+
+void musicToggle()
+{
+	if (spotify.isPlaying())
+	{
+		spotify.pause();
+	}
+	else
+	{
+		spotify.play();
+	}
+}

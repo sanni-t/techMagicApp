@@ -1,4 +1,6 @@
 #pragma once
+//Used to send HTTP REST requests to Hue lights and Spotify service
+
 #include"curl.h"
 #include"config.h"
 

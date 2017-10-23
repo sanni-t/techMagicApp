@@ -1,3 +1,8 @@
+//Performs detecion and tracing of wand by tracking the bright wand-tip blob 
+//and saving the most recently detected keypoints to a deque
+//which are then joined together to make a free-form trace
+//Also contains handwriting recognition & training code to recognize wand traces
+
 #include "stdafx.h"
 #include "config.h"
 #include"ImageProcessor.h" 
