@@ -12,7 +12,7 @@
 //#endif
 
 #include <WinSock2.h>
-#include<Windows.h>
+#include <Windows.h>
 #include "targetver.h"
 
 #include <stdio.h>

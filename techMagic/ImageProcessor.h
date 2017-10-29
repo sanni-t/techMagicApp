@@ -6,6 +6,7 @@
 #include "opencv2/features2d.hpp"
 #include "opencv2/video.hpp"
 #include "opencv2/ml.hpp"
+#include <chrono>
 
 using namespace cv;
 using namespace cv::ml;
@@ -16,7 +17,8 @@ using namespace std;
 #define MIN_1_TRACE_AREA	30000	//for 0
 #define MIN_2_TRACE_AREA	12500	//for '4'
 #define MIN_3_TRACE_AREA	23000	//for ~
-#define CROPPED_IMG_MARGIN	10	//pixels
+#define CROPPED_IMG_MARGIN	10		//pixels
+#define MAX_TRACE_SPEED		150		//pixels/second (30p/0.2sec)
 
 class ImageProcessor
 {
@@ -40,7 +42,9 @@ private:
 	Point traceUpperCorner;
 	Point traceLowerCorner;
 	
+	std::chrono::time_point<std::chrono::high_resolution_clock> _lastKeypointTime;
 	HOGDescriptor hog;
+	double _distance(Point& p, Point& q);
 	vector<KeyPoint> wandDetect(ushort[], int _numpixels);
 	void ConvertVectortoMatrix(vector<float> inHOG, Mat &outMat);
 	Mat cropSaveTrace();
@@ -62,6 +66,8 @@ public:
 #if ENABLE_SPELL_TRAINING
 	void spellRecognitionTrainer();
 #endif
+	bool wandVisible();
 	bool checkTraceValidity();
 	int recognizeSpell();
+	void eraseTrace();
 };

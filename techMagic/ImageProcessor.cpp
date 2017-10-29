@@ -44,6 +44,7 @@ void ImageProcessor::init(int width, int height)
 
 	_blobDetector = SimpleBlobDetector::create(_params);
 
+
 	hog = HOGDescriptor(
 		Size(64, 64), //winSize  50 x 50
 		Size(32, 32), //blocksize 32 x 32
@@ -71,7 +72,8 @@ std::vector<KeyPoint> ImageProcessor::wandDetect(ushort frameData[], int numPixe
 	{
 		uint8_t thisPixelIntensity = (uint8_t)(frameData[i] >> 8);
 		cameraFrame.at<unsigned char>(i) = thisPixelIntensity;
-		wandMoveTracingFrame.at<unsigned char>(i) = 0;
+		//Clear frame
+		//wandMoveTracingFrame.at<unsigned char>(i) = 0;
 	}
 	if (cameraFrame.empty())
 		return keypoints;
@@ -91,67 +93,114 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 {
 	blobKeypoints = wandDetect(frameData, numpixels);
 
-	//Add keypoints to deque
-	for (int i = 0; i < blobKeypoints.size(); i++)
+	//Add keypoints to deque. For now, take only the first found keypoint
+	if( blobKeypoints.size() != 0 )
 	{
-		if (i == 0)
+		// ----------->> _lastKeyPointTime = now();
+		auto currentKeypointTime = std::chrono::high_resolution_clock::now();
+
+		if (tracePoints.size() != 0)
 		{
-			if (tracePoints.size() >= DEQUE_BUFFER)
+			std::chrono::duration<double> elapsed = currentKeypointTime - _lastKeypointTime;
+			Point pt1(tracePoints[tracePoints.size() - 1].pt.x, tracePoints[tracePoints.size() - 1].pt.y);
+			Point pt2(blobKeypoints[0].pt.x, blobKeypoints[0].pt.y);
+
+			if (_distance(pt1,pt2) / elapsed.count() >= MAX_TRACE_SPEED)
+			{
+				return wandMoveTracingFrame;
+			}
+
+			if (tracePoints.size() >= DEQUE_BUFFER_SIZE)
 				tracePoints.pop_front();
-			tracePoints.push_back(blobKeypoints[i]);
+
+			tracePoints.push_back(blobKeypoints[0]);
+			//Point pt2(tracePoints[tracePoints.size() - 1].pt.x, tracePoints[tracePoints.size() - 1].pt.y);
+			line(wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
 		}
-	}
-	
-	//If no keypoints detected, start emptying the deque, one element at a time
-	if (blobKeypoints.size() == 0 && tracePoints.size() > 0)
-	{
-		tracePoints.pop_front();
-	}
-
-	traceUpperCorner = Point(_frameWidth, _frameHeight);
-	traceLowerCorner = Point(0, 0);
-
-	//Draw a trace by connecting all the keypoints stored in the deque
-	//Also update lower and upper bounds of the trace
-	for (int i = 1; i < tracePoints.size(); i++)
-	{
-		if (tracePoints[i].size == -99.0)
-			continue;
-		Point pt1(tracePoints[i - 1].pt.x, tracePoints[i - 1].pt.y);
-		Point pt2(tracePoints[i].pt.x, tracePoints[i].pt.y);
-
-		//Min x,y = traceUpperCorner points
-		//Max x,y = traceLowerCorner points
-		if (pt1.x < traceUpperCorner.x)
-			traceUpperCorner.x = pt1.x;
-		if (pt1.x > traceLowerCorner.x)
-			traceLowerCorner.x = pt1.x;
-		if (pt1.y < traceUpperCorner.y)
-			traceUpperCorner.y = pt1.y;
-		if (pt1.y > traceLowerCorner.y)
-			traceLowerCorner.y = pt1.y;
-
-		line(wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
+		else
+		{
+			_lastKeypointTime = currentKeypointTime;
+			tracePoints.push_back(blobKeypoints[0]);
+		}
 	}
 	
 	return wandMoveTracingFrame;
 }
 
-//int ImageProcessor::predictSpell(Mat spellImg)
-//{
-//	
-//}
+double ImageProcessor::_distance(Point& p, Point& q) {
+	Point diff = p - q;
+	return cv::sqrt(diff.x*diff.x + diff.y*diff.y);
+}
+
+bool ImageProcessor::wandVisible()
+{
+	if(blobKeypoints.size() == 0)
+		return false;
+	return true;
+}
 
 bool ImageProcessor::checkTraceValidity()
 {
-	if (blobKeypoints.size() == 0 && tracePoints.size() > DEQUE_BUFFER - 5)
+	if (blobKeypoints.size() == 0)
 	{
-		long traceArea = (traceLowerCorner.x - traceUpperCorner.x) * (traceLowerCorner.y - traceUpperCorner.y);
-		cout << "Trace area:" << traceArea << endl;
-		if (traceArea > MIN_0_TRACE_AREA)
-			return true;
+		auto currentKeypointTime = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> elapsed = currentKeypointTime - _lastKeypointTime;
+
+		if (elapsed.count() < 4.0)
+		{
+			return false;
+		}
+	
+		if (tracePoints.size() > DEQUE_BUFFER_SIZE - 5)
+		{
+			traceUpperCorner = Point(_frameWidth, _frameHeight);
+			traceLowerCorner = Point(0, 0);
+
+			//Draw a trace by connecting all the keypoints stored in the deque
+			//Also update lower and upper bounds of the trace
+			for (int i = 1; i < tracePoints.size(); i++)
+			{
+				if (tracePoints[i].size == -99.0)
+					continue;
+				Point pt1(tracePoints[i - 1].pt.x, tracePoints[i - 1].pt.y);
+				Point pt2(tracePoints[i].pt.x, tracePoints[i].pt.y);
+
+				//Min x,y = traceUpperCorner points
+				//Max x,y = traceLowerCorner points
+				if (pt1.x < traceUpperCorner.x)
+					traceUpperCorner.x = pt1.x;
+				if (pt1.x > traceLowerCorner.x)
+					traceLowerCorner.x = pt1.x;
+				if (pt1.y < traceUpperCorner.y)
+					traceUpperCorner.y = pt1.y;
+				if (pt1.y > traceLowerCorner.y)
+					traceLowerCorner.y = pt1.y;
+			}
+
+			long traceArea = (traceLowerCorner.x - traceUpperCorner.x) * (traceLowerCorner.y - traceUpperCorner.y);
+			cout << "Trace area:" << traceArea << endl;
+			
+			if (traceArea > MIN_0_TRACE_AREA)
+				return true;
+		}
+		//It's been over four seconds since the last keypoint and trace isn't valid
+		eraseTrace();
 	}
 	return false;
+}
+
+void ImageProcessor::eraseTrace()
+{
+	//Erase existing trace
+	for (uint i = 0; i < (_frameHeight*_frameWidth); i++)
+	{
+		wandMoveTracingFrame.at<unsigned char>(i) = 0;
+	}
+	//Empty corresponding tracePoints
+	while (tracePoints.size() != 0)
+	{
+		tracePoints.pop_front();
+	}
 }
 
 Mat ImageProcessor::cropSaveTrace()

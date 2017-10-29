@@ -42,6 +42,9 @@
     <ClInclude Include="httpService.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="config-template.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

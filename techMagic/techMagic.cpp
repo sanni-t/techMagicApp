@@ -31,26 +31,32 @@ int main()
 		
 		imshow(windowName, wandTraceFrame);
 
-		if(m_imageProcessor.checkTraceValidity())
+		if (m_imageProcessor.checkTraceValidity())
 		{
-			cout << "Trace Valid" << endl;
+			cout << "Trace valid for spell rcognition" << endl;
+
 			switch (m_imageProcessor.recognizeSpell())
 			{
 			case 0:
+				cout << "*** 0 ***" << endl;
 				musicToggle();
 				break;
 			case 1:
+				cout << "*** 1 ***" << endl;
 				blindsToggle();
 				break;
 			case 2:
+				cout << "*** 2 ***" << endl;
 				botToggle();
 				break;
 			case 3:
+				cout << "*** 3 ***" << endl;
 				lightsToggle();
 				break;
 			default:
 				cout << "That's not a spell" << endl;
 			}
+			m_imageProcessor.eraseTrace();
 		}
 #endif
 
@@ -61,7 +67,6 @@ int main()
 			cout << "Exiting";
 			break;
 		}
-
 #if DEBUG
 		else if (keyPressed == 'l' || keyPressed == 'L')
 		{ 
@@ -78,6 +83,10 @@ int main()
 		else if (keyPressed == 't' || keyPressed == 'T')
 		{
 			botToggle();
+		}
+		else if (keyPressed == 'u' || keyPressed == 'U')
+		{
+			updateSimblee();
 		}
 #else
 #if ENABLE_SAVE_IMAGE
@@ -112,6 +121,11 @@ void blindsToggle()
 	cout << "Bytes sent:" << dataSent << endl;
 }
 
+void updateSimblee()
+{
+	bool dataSent = serialPort->sendCommand(UPDATE_SIMBLEE);
+	cout << "Bytes sent:" << dataSent << endl;
+}
 void botToggle()
 {
 	bool dataSent = serialPort->sendCommand(LOCOMOTOR_BOT);

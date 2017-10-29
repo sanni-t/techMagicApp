@@ -90,6 +90,9 @@ bool Serial::sendCommand(SERIAL_CMD cmd)
 	case IMMOBULUS_BOT:
 		dataSent = WriteData("IMMOBULUS_BOT", 13);
 		break;
+	case UPDATE_SIMBLEE:
+		dataSent = WriteData("UpdateBoard",11);
+		break;
 	default:
 		break;
 	}

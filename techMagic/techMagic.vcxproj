@@ -165,6 +165,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="config-template.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="httpService.h" />
     <ClInclude Include="ImageProcessor.h" />
