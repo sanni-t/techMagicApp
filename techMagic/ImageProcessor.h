@@ -28,35 +28,35 @@ private:
 	
 	Mat cameraFrame;
 	Mat _fgMaskMOG2;
-	Mat wandMoveTracingFrame;
+	Mat _wandMoveTracingFrame;
 	
 	SimpleBlobDetector::Params _params;
 	
 	Ptr<SimpleBlobDetector> _blobDetector;
 	Ptr<BackgroundSubtractor> _pMOG2;
 	
-	vector<KeyPoint> blobKeypoints;
+	vector<KeyPoint> _blobKeypoints;
 
-	deque<KeyPoint> tracePoints;
+	deque<KeyPoint> _tracePoints;
 		
-	Point traceUpperCorner;
-	Point traceLowerCorner;
+	Point _traceUpperCorner;
+	Point _traceLowerCorner;
 	
 	std::chrono::time_point<std::chrono::high_resolution_clock> _lastKeypointTime;
-	HOGDescriptor hog;
+	HOGDescriptor _hog;
 	double _distance(Point& p, Point& q);
-	vector<KeyPoint> wandDetect(ushort[], int _numpixels);
-	void ConvertVectortoMatrix(vector<float> inHOG, Mat &outMat);
-	Mat cropSaveTrace();
-	Mat deskew(Mat& img);
+	vector<KeyPoint> _wandDetect(ushort[], int _numpixels);
+	void _ConvertVectortoMatrix(vector<float> inHOG, Mat &outMat);
+	Mat _cropSaveTrace();
+	Mat _deskew(Mat& img);
 
 #if ENABLE_SPELL_TRAINING
-	void loadTrainLabel(String pathName, vector<Mat> &trainCells, vector<int> &trainLabels);
-	void CreateDeskewedTrain(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells);
-	void CreateTrainHOG(vector<vector<float> > &trainHOG, vector<Mat> &deskewedTrainCells);
-	void ConvertVectortoMatrix(vector<vector<float> > &inHOG, Mat &outMat);
-	void getSVMParams(SVM *svm);
-	void SVMtrain(Mat &trainMat, vector<int> &trainLabels);
+	void _loadTrainLabel(String pathName, vector<Mat> &trainCells, vector<int> &trainLabels);
+	void _CreateDeskewedTrain(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells);
+	void _CreateTrainHOG(vector<vector<float> > &trainHOG, vector<Mat> &deskewedTrainCells);
+	void _ConvertVectortoMatrix(vector<vector<float> > &inHOG, Mat &outMat);
+	void _getSVMParams(SVM *svm);
+	void _SVMtrain(Mat &trainMat, vector<int> &trainLabels);
 	//void SVMevaluate(Mat &testResponse, float &count, float &accuracy, vector<int> &testLabels);
 #endif
 

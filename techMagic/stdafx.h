@@ -19,7 +19,9 @@
 #include <tchar.h>
 #include <iostream>
 #include <cstdlib>
-
+#include <string>
+#include <fstream> 
+#include <sstream>
 // Safe release for interfaces
 template<class Interface>
 inline void SafeRelease(Interface *& pInterfaceToRelease)

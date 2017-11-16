@@ -5,112 +5,50 @@
 #include"config.h"
 
 #define SPOTIFY_URL (string)"https://api.spotify.com"
+#define SPOTIFY_TOKEN_FILE (string)"__spfy.txt"
+#define SPOTIFY_TOKEN_LENGTH (int)147
+
+using namespace std;
 
 class httpService
 { 
 private:
 	CURL *_curl;
 	CURLcode _response;
-	curl_slist *headers = NULL;
+	curl_slist *_headers = NULL;
 
-	string hueUrl = HUE_ADDRESS + "/api/" + HUE_USERNAME + "/lights/1/state";
-	string spotifyPlayUrl = SPOTIFY_URL + "/v1/me/player/play";
-	string spotifyPauseUrl = SPOTIFY_URL + "/v1/me/player/pause";
-	string spotifyAuthorization = "Authorization: Bearer "+ SPOTIFY_ACCESS_TOKEN;
-	char *_JSONonText = "{ \"on\" : true}";
+	string _hueUrl = HUE_ADDRESS + "/api/" + HUE_USERNAME + "/lights/1/state";
+	string _spotifyAccessToken = "";
+	string _spotifyPlayUrl = SPOTIFY_URL + "/v1/me/player/play";
+	string _spotifyPauseUrl = SPOTIFY_URL + "/v1/me/player/pause";
+	string _spotifyAuthorization;
+	string _responseData;
+	string _playData = "{\"context_uri\":\"" + SPOTIFY_PLAY_CONTENT + "\",\"offset\":{\"position\":" + SPOTIFY_CONTENT_OFFSET + "}}";
+	
+	fstream _spotifyDataFile;
+	char *_spotifyClientAuthEncoded;
+	char *_JSONonText = "{ \"on\" : true, \"bri\": 254}";
 	char *_JSONoffText = "{ \"on\" : false}";
-	char *_playData = "{\"context_uri\":\"spotify:album:7DDls7RWrCLvZgTVCJgfcq\",\"offset\":{\"position\":20}}";
 	bool _isOn = false; //Change this to reflect true light status
 	bool _isPlaying = false;
+	
+	static size_t _responseWriter(void *contents, size_t size, size_t nmemb, void *userp);
+	int _getAccessToken();
+
+	void _updateSpotifyHeaders();
+#if SAVE_ACCESS_TOKEN
+	void _checkSavedAccessToken();
+	void _saveTokenToFile();
+#endif
 
 public:
-	bool isOn()
-	{
-		return _isOn;
-	}
-
-	bool isPlaying()
-	{
-		return _isPlaying;
-	}
-	httpService(serviceName _service)
-	{
-		curl_global_init(CURL_GLOBAL_ALL);
-		_curl = curl_easy_init();
-	
-		if (_curl)
-		{
-			if (_service == HUE_LIGHTS)
-			{
-				headers = curl_slist_append(headers, "Accept: application/json");
-				headers = curl_slist_append(headers, "Content-Type: text/plain");
-				headers = curl_slist_append(headers, "charsets: utf-8");
-				curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, headers);
-				curl_easy_setopt(_curl, CURLOPT_URL, hueUrl.data());
-				curl_easy_setopt(_curl, CURLOPT_CUSTOMREQUEST, "PUT");
-			}
-			else if (_service == SPOTIFY)
-			{
-				headers = curl_slist_append(headers, "Accept: application/json");
-				headers = curl_slist_append(headers, "Content-Type: application/json");
-				headers = curl_slist_append(headers, spotifyAuthorization.data());
-				curl_easy_setopt(_curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY); 
-				curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, false);
-				curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, headers);
-				curl_easy_setopt(_curl, CURLOPT_CUSTOMREQUEST, "PUT");
-				//curl_easy_setopt(_curl, CURLOPT_VERBOSE, 1L);
-			} 
-		}
-	}
-
-	void allOn()
-	{
-		if (_curl)
-		{
-			curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, _JSONonText);
-			_response = curl_easy_perform(_curl);
-			_isOn = true;	//TODO: true on successful status change
-			cout << _curl << endl;
-		}
-	}
-
-	void allOff()
-	{
-		if (_curl)
-		{
-			curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, _JSONoffText);
-			_response = curl_easy_perform(_curl);
-			_isOn = false;	//TODO: false on successful status change
-		}
-	}
-
-	void play()
-	{
-		if (_curl)
-		{
-			curl_easy_setopt(_curl, CURLOPT_URL, spotifyPlayUrl.data());
-			curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, _playData);
-			_response = curl_easy_perform(_curl);
-			_isPlaying = true;
-		}
-	}
-
-	void pause()
-	{
-		if (_curl)
-		{
-			curl_easy_setopt(_curl, CURLOPT_URL, spotifyPauseUrl.data());
-			curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, "");
-			_response = curl_easy_perform(_curl);
-			_isPlaying = false; 
-		}
-	}
-
-	~httpService()
-	{
-		curl_slist_free_all(headers);
-		curl_easy_cleanup(_curl);
-		curl_global_cleanup();
-	}
+	void init(serviceName _service);
+	bool isOn();
+	bool isPlaying();
+	void allOn();
+	void allOff();
+	void play();
+	void pause();
+	~httpService();
 };
 

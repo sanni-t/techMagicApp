@@ -12,9 +12,9 @@ enum MAGIC_RESULT
 
 //---------- ImageProcessor --------
 
-#define DEQUE_BUFFER			32
+#define DEQUE_BUFFER			40
 #define TRACE_THICKNESS			4
-#define BGS_HISTORY_FRAMES		250
+#define BGS_HISTORY_FRAMES		200
 #define ENABLE_SAVE_IMAGE		true
 #define ENABLE_SPELL_TRAINING	true
 #define TRAINED_SPELL_MODEL		"spellsModel.yml"
@@ -29,10 +29,10 @@ enum MAGIC_RESULT
 
 #define HUE_ADDRESS (string)"http://<YOUR HUE IP ADDRESS>"
 #define HUE_USERNAME (string)"<YOUR HUE USERNAME>"
-#define SPOTIFY_APP_ID (string)"<YOUR APP ID>"
-#define SPOTIFY_APP_SECRET (string)"<YOUR APP SECRET KEY>"
-#define SPOTIFY_ACCESS_TOKEN (string)"<YOUR ACCESS TOKEN>"
+#define SPOTIFY_CLIENT_AUTH_ENCODED (string)"<YOUR ENCODED AUTH STRING>"
 #define SPOTIFY_REFRESH_TOKEN (string)"<YOUR REFRESH TOKEN>"
+#define SPOTIFY_PLAY_CONTENT (string)"spotify:album:7DDls7RWrCLvZgTVCJgfcq"	//Add your playlist/album spotify URI. Default- Prisoner of Azkaban OST 
+#define SPOTIFY_CONTENT_OFFSET (string)"20"	//Track number. Default- Mischief managed
 
 typedef enum
 {
@@ -45,7 +45,7 @@ typedef enum
 
 typedef enum
 {
-	FLIP_BLINDS,
-	LOCOMOTOR_BOT,
-	IMMOBULUS_BOT
+	UPDATE_SIMBLEE,
+	TURN_BLINDS,
+	LOCOMOTOR
 }SERIAL_CMD;

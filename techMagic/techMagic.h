@@ -11,12 +11,13 @@ using namespace std;
 
 #define ESC_KEY 27
 #define SPACE_KEY 32
+#define ALT_KEY 18
 
 KinectHandler m_kinect;
 ImageProcessor m_imageProcessor;
-httpService hueLights = httpService(HUE_LIGHTS);
-httpService spotify = httpService(SPOTIFY);
-Serial* serialPort = new Serial("COM8");
+httpService hueLights;
+httpService spotify;
+Serial* serialPort = new Serial("COM9");
 String windowName = "Wand Trace Window";
 //C++11 Style:***
 //steady_clock::time_point lastKeyPoint = steady_clock::now();

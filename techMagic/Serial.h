@@ -29,7 +29,8 @@ public:
 	Serial(const char *portName);
 	
 	bool sendCommand(SERIAL_CMD cmd);
-
+	bool botMoving = false;
+	void blindsConfig(int keyPressed);
 	//Close the connection
 	~Serial();
 	

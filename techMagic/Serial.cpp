@@ -1,7 +1,7 @@
 //Used for interfacing with the Serial Port
 //Sends spells commands to the Simblee breakout board connected to Serial
 //This Simblee broadcasts to the remote Simblee boards on it's COM wireless channel
-//Used to FLIP_BLINDS and LOCOMOTR/IMMOBLUS my robot
+//Used to TURN_BLINDS and LOCOMOTOR my robot
 
 #include "stdafx.h"
 #include "config.h"
@@ -81,14 +81,11 @@ bool Serial::sendCommand(SERIAL_CMD cmd)
 	bool dataSent;
 	switch (cmd)
 	{
-	case FLIP_BLINDS:
-		dataSent = WriteData("FLIP_BLINDS", 11);
+	case TURN_BLINDS:
+		dataSent = WriteData("TURN_BLINDS", 11);
 		break;
-	case LOCOMOTOR_BOT:
-		dataSent = WriteData("LOCOMOTOR_BOT", 13);
-		break;
-	case IMMOBULUS_BOT:
-		dataSent = WriteData("IMMOBULUS_BOT", 13);
+	case LOCOMOTOR:
+		dataSent = WriteData("LOCOMOTOR", 13);
 		break;
 	case UPDATE_SIMBLEE:
 		dataSent = WriteData("UpdateBoard",11);
@@ -170,4 +167,20 @@ bool Serial::IsConnected()
 {
 	//Simply return the connection status
 	return this->connected;
+}
+
+void Serial::blindsConfig(int keyPressed)
+{
+	if (keyPressed == '1'		/* Blind 1, clockwise */
+		|| keyPressed == '2'	/* Blind 2, clockwise */
+		|| keyPressed == '3'	/* Blind 3, clockwise */
+		|| keyPressed == '!'	/* Blind 1, counterclockwise */
+		|| keyPressed == '@'	/* Blind 2, counterclockwise */
+		|| keyPressed == '#')	/* Blind 3, counterclockwise */
+	{
+		char key = (char)keyPressed;
+		char* buf = &key;
+
+		WriteData(buf, 1);
+	}
 }

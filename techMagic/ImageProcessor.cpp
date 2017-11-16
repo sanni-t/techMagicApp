@@ -12,7 +12,7 @@ void ImageProcessor::init(int width, int height)
 	_frameWidth = width;
 	_frameHeight = height;
 
-	wandMoveTracingFrame = Mat(_frameHeight, _frameWidth, CV_8U);
+	_wandMoveTracingFrame = Mat(_frameHeight, _frameWidth, CV_8U);
 	cameraFrame = Mat(_frameHeight, _frameWidth, CV_8U);
 
 	_pMOG2 = createBackgroundSubtractorMOG2(BGS_HISTORY_FRAMES);
@@ -44,11 +44,10 @@ void ImageProcessor::init(int width, int height)
 
 	_blobDetector = SimpleBlobDetector::create(_params);
 
-
-	hog = HOGDescriptor(
+	_hog = HOGDescriptor(
 		Size(64, 64), //winSize  50 x 50
 		Size(32, 32), //blocksize 32 x 32
-		Size(16, 16), //blockStride, 8 x 8
+		Size(16, 16), //blockStride, 16 x 16
 		Size(16, 16), //cellSize, 16 x 16
 		9, //nbins,
 		1, //derivAper,
@@ -62,7 +61,7 @@ void ImageProcessor::init(int width, int height)
 	return;
 }
 
-std::vector<KeyPoint> ImageProcessor::wandDetect(ushort frameData[], int numPixels)
+std::vector<KeyPoint> ImageProcessor::_wandDetect(ushort frameData[], int numPixels)
 {
 	// Storage for blobs
 	std::vector<KeyPoint> keypoints;
@@ -91,40 +90,40 @@ std::vector<KeyPoint> ImageProcessor::wandDetect(ushort frameData[], int numPixe
 
 Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 {
-	blobKeypoints = wandDetect(frameData, numpixels);
+	_blobKeypoints = _wandDetect(frameData, numpixels);
 
 	//Add keypoints to deque. For now, take only the first found keypoint
-	if( blobKeypoints.size() != 0 )
+	if(_blobKeypoints.size() != 0 )
 	{
 		// ----------->> _lastKeyPointTime = now();
 		auto currentKeypointTime = std::chrono::high_resolution_clock::now();
 
-		if (tracePoints.size() != 0)
+		if (_tracePoints.size() != 0)
 		{
 			std::chrono::duration<double> elapsed = currentKeypointTime - _lastKeypointTime;
-			Point pt1(tracePoints[tracePoints.size() - 1].pt.x, tracePoints[tracePoints.size() - 1].pt.y);
-			Point pt2(blobKeypoints[0].pt.x, blobKeypoints[0].pt.y);
+			Point pt1(_tracePoints[_tracePoints.size() - 1].pt.x, _tracePoints[_tracePoints.size() - 1].pt.y);
+			Point pt2(_blobKeypoints[0].pt.x, _blobKeypoints[0].pt.y);
 
 			if (_distance(pt1,pt2) / elapsed.count() >= MAX_TRACE_SPEED)
 			{
-				return wandMoveTracingFrame;
+				return _wandMoveTracingFrame;
 			}
 
-			if (tracePoints.size() >= DEQUE_BUFFER_SIZE)
-				tracePoints.pop_front();
+			if (_tracePoints.size() >= DEQUE_BUFFER_SIZE)
+				_tracePoints.pop_front();
 
-			tracePoints.push_back(blobKeypoints[0]);
+			_tracePoints.push_back(_blobKeypoints[0]);
 			//Point pt2(tracePoints[tracePoints.size() - 1].pt.x, tracePoints[tracePoints.size() - 1].pt.y);
-			line(wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
+			line(_wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
 		}
 		else
 		{
 			_lastKeypointTime = currentKeypointTime;
-			tracePoints.push_back(blobKeypoints[0]);
+			_tracePoints.push_back(_blobKeypoints[0]);
 		}
 	}
 	
-	return wandMoveTracingFrame;
+	return _wandMoveTracingFrame;
 }
 
 double ImageProcessor::_distance(Point& p, Point& q) {
@@ -134,50 +133,50 @@ double ImageProcessor::_distance(Point& p, Point& q) {
 
 bool ImageProcessor::wandVisible()
 {
-	if(blobKeypoints.size() == 0)
+	if(_blobKeypoints.size() == 0)
 		return false;
 	return true;
 }
 
 bool ImageProcessor::checkTraceValidity()
 {
-	if (blobKeypoints.size() == 0)
+	if (_blobKeypoints.size() == 0)
 	{
 		auto currentKeypointTime = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = currentKeypointTime - _lastKeypointTime;
 
-		if (elapsed.count() < 4.0)
+		if (elapsed.count() < 5.0)
 		{
 			return false;
 		}
 	
-		if (tracePoints.size() > DEQUE_BUFFER_SIZE - 5)
+		if (_tracePoints.size() > DEQUE_BUFFER_SIZE - 5)
 		{
-			traceUpperCorner = Point(_frameWidth, _frameHeight);
-			traceLowerCorner = Point(0, 0);
+			_traceUpperCorner = Point(_frameWidth, _frameHeight);
+			_traceLowerCorner = Point(0, 0);
 
 			//Draw a trace by connecting all the keypoints stored in the deque
 			//Also update lower and upper bounds of the trace
-			for (int i = 1; i < tracePoints.size(); i++)
+			for (int i = 1; i < _tracePoints.size(); i++)
 			{
-				if (tracePoints[i].size == -99.0)
+				if (_tracePoints[i].size == -99.0)
 					continue;
-				Point pt1(tracePoints[i - 1].pt.x, tracePoints[i - 1].pt.y);
-				Point pt2(tracePoints[i].pt.x, tracePoints[i].pt.y);
+				Point pt1(_tracePoints[i - 1].pt.x, _tracePoints[i - 1].pt.y);
+				Point pt2(_tracePoints[i].pt.x, _tracePoints[i].pt.y);
 
 				//Min x,y = traceUpperCorner points
 				//Max x,y = traceLowerCorner points
-				if (pt1.x < traceUpperCorner.x)
-					traceUpperCorner.x = pt1.x;
-				if (pt1.x > traceLowerCorner.x)
-					traceLowerCorner.x = pt1.x;
-				if (pt1.y < traceUpperCorner.y)
-					traceUpperCorner.y = pt1.y;
-				if (pt1.y > traceLowerCorner.y)
-					traceLowerCorner.y = pt1.y;
+				if (pt1.x < _traceUpperCorner.x)
+					_traceUpperCorner.x = pt1.x;
+				if (pt1.x > _traceLowerCorner.x)
+					_traceLowerCorner.x = pt1.x;
+				if (pt1.y < _traceUpperCorner.y)
+					_traceUpperCorner.y = pt1.y;
+				if (pt1.y > _traceLowerCorner.y)
+					_traceLowerCorner.y = pt1.y;
 			}
 
-			long traceArea = (traceLowerCorner.x - traceUpperCorner.x) * (traceLowerCorner.y - traceUpperCorner.y);
+			long traceArea = (_traceLowerCorner.x - _traceUpperCorner.x) * (_traceLowerCorner.y - _traceUpperCorner.y);
 			cout << "Trace area:" << traceArea << endl;
 			
 			if (traceArea > MIN_0_TRACE_AREA)
@@ -194,40 +193,40 @@ void ImageProcessor::eraseTrace()
 	//Erase existing trace
 	for (uint i = 0; i < (_frameHeight*_frameWidth); i++)
 	{
-		wandMoveTracingFrame.at<unsigned char>(i) = 0;
+		_wandMoveTracingFrame.at<unsigned char>(i) = 0;
 	}
 	//Empty corresponding tracePoints
-	while (tracePoints.size() != 0)
+	while (_tracePoints.size() != 0)
 	{
-		tracePoints.pop_front();
+		_tracePoints.pop_front();
 	}
 }
 
-Mat ImageProcessor::cropSaveTrace()
+Mat ImageProcessor::_cropSaveTrace()
 {
-	if (traceUpperCorner.x > CROPPED_IMG_MARGIN)
-		traceUpperCorner.x -= CROPPED_IMG_MARGIN;
+	if (_traceUpperCorner.x > CROPPED_IMG_MARGIN)
+		_traceUpperCorner.x -= CROPPED_IMG_MARGIN;
 	else
-		traceUpperCorner.x = 0;
+		_traceUpperCorner.x = 0;
 
-	if (traceUpperCorner.y > CROPPED_IMG_MARGIN)
-		traceUpperCorner.y -= CROPPED_IMG_MARGIN;
+	if (_traceUpperCorner.y > CROPPED_IMG_MARGIN)
+		_traceUpperCorner.y -= CROPPED_IMG_MARGIN;
 	else
-		traceUpperCorner.y = 0;
+		_traceUpperCorner.y = 0;
 
-	if (traceLowerCorner.x < _frameWidth - CROPPED_IMG_MARGIN)
-		traceLowerCorner.x += CROPPED_IMG_MARGIN;
+	if (_traceLowerCorner.x < _frameWidth - CROPPED_IMG_MARGIN)
+		_traceLowerCorner.x += CROPPED_IMG_MARGIN;
 	else
-		traceLowerCorner.x = _frameWidth;
+		_traceLowerCorner.x = _frameWidth;
 
-	if (traceLowerCorner.y < _frameHeight - CROPPED_IMG_MARGIN)
-		traceLowerCorner.y += CROPPED_IMG_MARGIN;
+	if (_traceLowerCorner.y < _frameHeight - CROPPED_IMG_MARGIN)
+		_traceLowerCorner.y += CROPPED_IMG_MARGIN;
 	else
-		traceLowerCorner.y = _frameHeight;
+		_traceLowerCorner.y = _frameHeight;
 
 
-	int traceWidth = traceLowerCorner.x - traceUpperCorner.x;
-	int traceHeight = traceLowerCorner.y - traceUpperCorner.y;
+	int traceWidth = _traceLowerCorner.x - _traceUpperCorner.x;
+	int traceHeight = _traceLowerCorner.y - _traceUpperCorner.y;
 
 	Mat resizedCroppedTrace; 
 	Size _size;
@@ -246,33 +245,33 @@ Mat ImageProcessor::cropSaveTrace()
 	cout << "Resized width: " << _size.width << endl;
 	cout << "Resized height: " << _size.height << endl;
 
-	resize(wandMoveTracingFrame(Rect(traceUpperCorner, traceLowerCorner)).clone(), resizedCroppedTrace, _size);
+	resize(_wandMoveTracingFrame(Rect(_traceUpperCorner, _traceLowerCorner)).clone(), resizedCroppedTrace, _size);
 	cout << "Trace resized!" << endl;
-	Mat finalTraceCell = Mat::zeros(TRAINER_IMAGE_WIN_SIZE, TRAINER_IMAGE_WIN_SIZE, CV_8U);
+	Mat _finalTraceCell = Mat::zeros(TRAINER_IMAGE_WIN_SIZE, TRAINER_IMAGE_WIN_SIZE, CV_8U);
 	for (int i = 0; i < resizedCroppedTrace.rows; i++)
 	{
 		for (int j = 0; j < resizedCroppedTrace.cols;j++)
 		{
 			
-			finalTraceCell.at<unsigned char>(i,j) = resizedCroppedTrace.at<unsigned char>(i,j);
+			_finalTraceCell.at<unsigned char>(i,j) = resizedCroppedTrace.at<unsigned char>(i,j);
 		}
 	}
 	cout << "Done copying to 64 x 64";
-	imshow("Debug window", finalTraceCell);
-	imwrite("spellTraceCell.png", finalTraceCell);
-	return finalTraceCell;	
+	imshow("Debug window", _finalTraceCell);
+	imwrite("spellTraceCell.png", _finalTraceCell);
+	return _finalTraceCell;
 }
 
 int ImageProcessor::recognizeSpell()
 {
-	Mat deskewedTrace = deskew(cropSaveTrace());
+	Mat deskewedTrace = _deskew(_cropSaveTrace());
 	cout << "Trace deskewed" << endl;
 	vector<float> descriptors;
-	hog.compute(deskewedTrace, descriptors);
+	_hog.compute(deskewedTrace, descriptors);
 	cout << "Hog computing done" << endl;
 	Mat descriptorMatrix(1, descriptors.size(), CV_32FC1);
 	Mat spellPrediction;
-	ConvertVectortoMatrix(descriptors, descriptorMatrix);
+	_ConvertVectortoMatrix(descriptors, descriptorMatrix);
 
 	Ptr<SVM> svm = svm->load<SVM>("spellsModel.yml");
 	cout << "svm file loaded" << endl;
@@ -287,7 +286,7 @@ int ImageProcessor::recognizeSpell()
 	return (int)prediction;
 }
 
-void ImageProcessor::ConvertVectortoMatrix(vector<float> inHOG, Mat &outMat)
+void ImageProcessor::_ConvertVectortoMatrix(vector<float> inHOG, Mat &outMat)
 {
 	int descriptor_size = inHOG.size();
 
@@ -302,24 +301,24 @@ void ImageProcessor::spellRecognitionTrainer()
 {
 	vector<Mat> trainCells;
 	vector<int> trainLabels;
-	loadTrainLabel(GESTURE_TRAINER_IMAGE, trainCells, trainLabels);
+	_loadTrainLabel(GESTURE_TRAINER_IMAGE, trainCells, trainLabels);
 
 	vector<Mat> deskewedTrainCells;
-	CreateDeskewedTrain(deskewedTrainCells, trainCells);
+	_CreateDeskewedTrain(deskewedTrainCells, trainCells);
 
 	std::vector<std::vector<float> > trainHOG;
 	std::vector<std::vector<float> > testHOG;
-	CreateTrainHOG(trainHOG, deskewedTrainCells);
+	_CreateTrainHOG(trainHOG, deskewedTrainCells);
 
 	int descriptor_size = trainHOG[0].size();
 	cout << "Descriptor Size : " << descriptor_size << endl;
 
 	Mat trainMat(trainHOG.size(), descriptor_size, CV_32FC1);
 	
-	ConvertVectortoMatrix(trainHOG, trainMat);
+	_ConvertVectortoMatrix(trainHOG, trainMat);
 
 	//Mat testResponse;
-	SVMtrain(trainMat, trainLabels);
+	_SVMtrain(trainMat, trainLabels);
 
 	//float count = 0;
 	//float accuracy = 0;
@@ -328,7 +327,7 @@ void ImageProcessor::spellRecognitionTrainer()
 	//cout << "the accuracy is :" << accuracy << endl;
 }
 
-void ImageProcessor::ConvertVectortoMatrix(vector<vector<float> > &inHOG, Mat &outMat)
+void ImageProcessor::_ConvertVectortoMatrix(vector<vector<float> > &inHOG, Mat &outMat)
 {
 	int descriptor_size = inHOG[0].size();
 
@@ -339,7 +338,7 @@ void ImageProcessor::ConvertVectortoMatrix(vector<vector<float> > &inHOG, Mat &o
 	}
 }
 
-void ImageProcessor::loadTrainLabel(String pathName, vector<Mat> &trainCells, vector<int> &trainLabels) {
+void ImageProcessor::_loadTrainLabel(String pathName, vector<Mat> &trainCells, vector<int> &trainLabels) {
 
 	Mat img = imread(pathName, CV_LOAD_IMAGE_GRAYSCALE);
 
@@ -365,25 +364,25 @@ void ImageProcessor::loadTrainLabel(String pathName, vector<Mat> &trainCells, ve
 	}
 }
 
-void ImageProcessor::CreateDeskewedTrain(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells) {
+void ImageProcessor::_CreateDeskewedTrain(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells) {
 
 	for (int i = 0;i<trainCells.size();i++) {
 
-		Mat deskewedImg = deskew(trainCells[i]);
+		Mat deskewedImg = _deskew(trainCells[i]);
 		deskewedTrainCells.push_back(deskewedImg);
 	}
 }
 
-void ImageProcessor::CreateTrainHOG(vector<vector<float> > &trainHOG, vector<Mat> &deskewedtrainCells) {
+void ImageProcessor::_CreateTrainHOG(vector<vector<float> > &trainHOG, vector<Mat> &deskewedtrainCells) {
 
 	for (int y = 0;y<deskewedtrainCells.size();y++) {
 		vector<float> descriptors;
-		hog.compute(deskewedtrainCells[y], descriptors);
+		_hog.compute(deskewedtrainCells[y], descriptors);
 		trainHOG.push_back(descriptors);
 	}
 }
 
-void ImageProcessor::getSVMParams(SVM *svm)
+void ImageProcessor::_getSVMParams(SVM *svm)
 {
 	cout << "Kernel type     : " << svm->getKernelType() << endl;
 	cout << "Type            : " << svm->getType() << endl;
@@ -393,7 +392,7 @@ void ImageProcessor::getSVMParams(SVM *svm)
 	cout << "Gamma           : " << svm->getGamma() << endl;
 }
 
-void  ImageProcessor::SVMtrain(Mat &trainMat, vector<int> &trainLabels) {
+void  ImageProcessor::_SVMtrain(Mat &trainMat, vector<int> &trainLabels) {
 
 
 	Ptr<SVM> svm = SVM::create();
@@ -405,7 +404,7 @@ void  ImageProcessor::SVMtrain(Mat &trainMat, vector<int> &trainLabels) {
 	svm->train(td);
 	//	svm->trainAuto(td);
 	svm->save("model4.yml");
-	getSVMParams(svm);
+	_getSVMParams(svm);
 }
 
 //void  ImageProcessor::SVMevaluate(Mat &testResponse, float &count, float &accuracy, vector<int> &testLabels) {
@@ -422,7 +421,7 @@ void  ImageProcessor::SVMtrain(Mat &trainMat, vector<int> &trainLabels) {
 #endif // ENABLE_SPELL_TRAINING
 
 
-Mat ImageProcessor::deskew(Mat& img)
+Mat ImageProcessor::_deskew(Mat& img)
 {
 	int SZ = 20;
 	float affineFlags = WARP_INVERSE_MAP | INTER_LINEAR;

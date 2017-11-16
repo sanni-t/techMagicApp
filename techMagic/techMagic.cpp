@@ -15,6 +15,8 @@ int main()
 	}
 
 	m_imageProcessor.init(m_kinect.frameWidth, m_kinect.frameHeight);
+	hueLights.init(HUE_LIGHTS);
+	spotify.init(SPOTIFY);
 
 #if ENABLE_SAVE_IMAGE
 	int fileNum = 0;
@@ -38,19 +40,19 @@ int main()
 			switch (m_imageProcessor.recognizeSpell())
 			{
 			case 0:
-				cout << "*** 0 ***" << endl;
+				cout << "*** 0: Music Toggle ***" << endl;
 				musicToggle();
 				break;
 			case 1:
-				cout << "*** 1 ***" << endl;
+				cout << "*** 1: Blinds Toggle ***" << endl;
 				blindsToggle();
 				break;
 			case 2:
-				cout << "*** 2 ***" << endl;
+				cout << "*** 2: Bot Move ***" << endl;
 				botToggle();
 				break;
 			case 3:
-				cout << "*** 3 ***" << endl;
+				cout << "*** 3: Lights Toggle ***" << endl;
 				lightsToggle();
 				break;
 			default:
@@ -61,11 +63,17 @@ int main()
 #endif
 
 		int keyPressed = waitKey(10);
-
+		if(keyPressed != -1)
+			cout << keyPressed <<endl;
+		
 		if (keyPressed == ESC_KEY)
 		{
 			cout << "Exiting";
 			break;
+		}
+		else if (keyPressed == 'u' || keyPressed == 'U')
+		{
+			updateSimblee();
 		}
 #if DEBUG
 		else if (keyPressed == 'l' || keyPressed == 'L')
@@ -84,9 +92,9 @@ int main()
 		{
 			botToggle();
 		}
-		else if (keyPressed == 'u' || keyPressed == 'U')
+		else if (keyPressed >= '!' && keyPressed <= '@')
 		{
-			updateSimblee();
+			serialPort->blindsConfig(keyPressed);
 		}
 #else
 #if ENABLE_SAVE_IMAGE
@@ -117,18 +125,16 @@ void lightsToggle() {
 
 void blindsToggle()
 {
-	bool dataSent =	serialPort->sendCommand(FLIP_BLINDS);
-	cout << "Bytes sent:" << dataSent << endl;
+	bool dataSent =	serialPort->sendCommand(TURN_BLINDS);
 }
 
 void updateSimblee()
 {
 	bool dataSent = serialPort->sendCommand(UPDATE_SIMBLEE);
-	cout << "Bytes sent:" << dataSent << endl;
 }
 void botToggle()
 {
-	bool dataSent = serialPort->sendCommand(LOCOMOTOR_BOT);
+	bool dataSent = serialPort->sendCommand(LOCOMOTOR);
 }
 
 void musicToggle()
