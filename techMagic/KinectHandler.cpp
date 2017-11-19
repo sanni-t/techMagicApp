@@ -1,24 +1,25 @@
-//Reads frame data from Kinect's Long exposure IR camera 
-//to be sent to ImageProcessor
+/** Reads frame data from Kinect's Long exposure IR camera **/
+/** to be sent to ImageProcessor						   **/
 
 #include "stdafx.h"
 #include"KinectHandler.h"
 
 
-//Returns HRESULT of 
+/*fn: Initialize Kinect, use Long Exposure Infrared Frame Source	*/
+/*rn: Code for result of operation									*/
 HRESULT KinectHandler::init()
 {
 
 	if (FAILED(GetDefaultKinectSensor(&_kinectSensor)))
 	{
 		printf("Failed to find Kinect sensor");
-		return -3;
+		return KINECT_ERROR;
 	}
 
 	if (FAILED(_kinectSensor->Open()))
 	{
 		printf("Failed to open Kinect sensor");
-		return -2;
+		return KINECT_ERROR;
 	}
 
 	ILongExposureInfraredFrameSource* _leirFrameSource;
@@ -26,7 +27,7 @@ HRESULT KinectHandler::init()
 	if (FAILED(_kinectSensor->get_LongExposureInfraredFrameSource(&_leirFrameSource)))
 	{
 		printf("Error fetching IR frame source");
-		return -3;
+		return KINECT_ERROR;
 	}
 
 	_leirFrameSource->get_FrameDescription(&_irFrameDescription);
@@ -43,6 +44,7 @@ HRESULT KinectHandler::init()
 	return _hResult;
 }
 
+//Release all used resources on exit
 void KinectHandler::close()
 {
 	_kinectSensor->Close();

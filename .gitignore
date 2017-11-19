@@ -243,3 +243,5 @@ ModelManifest.xml
 
 ##Ignore personal data config file
 config.h
+/techMagic/ImageProcessor_cpp_documentationCode.txt
+/techMagic/__spfy.txt

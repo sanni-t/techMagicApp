@@ -7,6 +7,7 @@
 #include "config.h"
 #include"ImageProcessor.h" 
 
+/* Initialize all parameters for wand detection and spell recognition*/
 void ImageProcessor::init(int width, int height)
 {
 	_frameWidth = width;
@@ -61,6 +62,8 @@ void ImageProcessor::init(int width, int height)
 	return;
 }
 
+/* fn: Perform background elimination and blob detection */
+/* rn: Detected blob keypoint(s)					  	 */
 std::vector<KeyPoint> ImageProcessor::_wandDetect(ushort frameData[], int numPixels)
 {
 	// Storage for blobs
@@ -88,6 +91,9 @@ std::vector<KeyPoint> ImageProcessor::_wandDetect(ushort frameData[], int numPix
 	return keypoints;
 }
 
+/* fn: Check for spurious keypoints and					*/
+/*	   draw a trace by joining the valid blob keypoints	*/
+/* rn: Mat frame containing the trace					*/
 Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 {
 	_blobKeypoints = _wandDetect(frameData, numpixels);
@@ -95,7 +101,6 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 	//Add keypoints to deque. For now, take only the first found keypoint
 	if(_blobKeypoints.size() != 0 )
 	{
-		// ----------->> _lastKeyPointTime = now();
 		auto currentKeypointTime = std::chrono::high_resolution_clock::now();
 
 		if (_tracePoints.size() != 0)
@@ -138,6 +143,13 @@ bool ImageProcessor::wandVisible()
 	return true;
 }
 
+/* fn: Check if the trace qualifies for a possible spell				*/
+/*		Conditions for qualification-									*/
+/*		a) It isn't being currently drawn.								*/
+/*		   i.e., 5 seconds have passed since the last detected keypoint	*/
+/*		b) It is made of at least 35 keypoints							*/
+/*		c) Area covered by the trace is sufficiently large				*/
+/* rn: Result (true/false) of the check									*/	
 bool ImageProcessor::checkTraceValidity()
 {
 	if (_blobKeypoints.size() == 0)
@@ -182,7 +194,7 @@ bool ImageProcessor::checkTraceValidity()
 			if (traceArea > MIN_0_TRACE_AREA)
 				return true;
 		}
-		//It's been over four seconds since the last keypoint and trace isn't valid
+		//It's been over five seconds since the last keypoint and trace isn't valid
 		eraseTrace();
 	}
 	return false;
@@ -202,6 +214,8 @@ void ImageProcessor::eraseTrace()
 	}
 }
 
+/* fn: Crop and resize the trace to 64x64 pixels */
+/* rn: The resized frame						 */	
 Mat ImageProcessor::_cropSaveTrace()
 {
 	if (_traceUpperCorner.x > CROPPED_IMG_MARGIN)
@@ -258,29 +272,32 @@ Mat ImageProcessor::_cropSaveTrace()
 	}
 	cout << "Done copying to 64 x 64";
 	imshow("Debug window", _finalTraceCell);
-	imwrite("spellTraceCell.png", _finalTraceCell);
+	//imwrite("spellTraceCell.png", _finalTraceCell);
 	return _finalTraceCell;
 }
 
+/* fn: Perform handwriting recognition algorthm provided by OpenCV */
+/*	   to recognize the spells from traces.						   */
+/*	   See here for detailed explanation:						   */
+/*	   https://www.learnopencv.com/handwritten-digits-classification-an-opencv-c-python-tutorial/ */
+/* rn: Index of the spell recognized:-								*/
+/*		0:	'M'														*/
+/*		1:	<blinds spell symbol>									*/
+/*		2:	'4'														*/
+/*		3:	<lights spell sumbol>									*/
 int ImageProcessor::recognizeSpell()
 {
 	Mat deskewedTrace = _deskew(_cropSaveTrace());
-	cout << "Trace deskewed" << endl;
+	
 	vector<float> descriptors;
 	_hog.compute(deskewedTrace, descriptors);
-	cout << "Hog computing done" << endl;
+	
 	Mat descriptorMatrix(1, descriptors.size(), CV_32FC1);
 	Mat spellPrediction;
 	_ConvertVectortoMatrix(descriptors, descriptorMatrix);
 
 	Ptr<SVM> svm = svm->load<SVM>("spellsModel.yml");
-	cout << "svm file loaded" << endl;
 
-	/*= SVM::create();
-	svm->setGamma(0.50625);
-	svm->setC(12.5);
-	svm->setKernel(SVM::RBF);
-	svm->setType(SVM::C_SVC);*/
 	float prediction = svm->predict(descriptorMatrix);
 	cout << prediction << endl;
 	return (int)prediction;

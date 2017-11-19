@@ -1,7 +1,8 @@
-//Used for interfacing with the Serial Port
-//Sends spells commands to the Simblee breakout board connected to Serial
-//This Simblee broadcasts to the remote Simblee boards on it's COM wireless channel
-//Used to TURN_BLINDS and LOCOMOTOR my robot
+/**	Contains Serial communication code from https://playground.arduino.cc/Interfacing/CPPWindows	**/
+/** Used for interfacing with the Serial Port														**/
+/** Sends spells commands to the Simblee breakout board connected to Serial	port					**/
+/** This Simblee broadcasts to the remote Simblee boards on it's COM wireless channel				**/
+/** Used to TURN_BLINDS and LOCOMOTOR my robot														**/
 
 #include "stdafx.h"
 #include "config.h"
@@ -87,7 +88,7 @@ bool Serial::sendCommand(SERIAL_CMD cmd)
 	case LOCOMOTOR:
 		dataSent = WriteData("LOCOMOTOR", 13);
 		break;
-	case UPDATE_SIMBLEE:
+	case UPDATE_SIMBLEE:	//To enable Over the Air firmware update using Phone app
 		dataSent = WriteData("UpdateBoard",11);
 		break;
 	default:
@@ -169,6 +170,9 @@ bool Serial::IsConnected()
 	return this->connected;
 }
 
+/** This function is used when in debug mode. Allows you to turn the blinds  **/
+/** using keyboard. Useful when preconfiguring/ initializing the blinds to a **/
+/** known state																 **/
 void Serial::blindsConfig(int keyPressed)
 {
 	if (keyPressed == '1'		/* Blind 1, clockwise */

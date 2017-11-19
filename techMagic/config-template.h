@@ -1,32 +1,32 @@
 #pragma once
-#pragma once
 
 #define DEBUG true
 
 enum MAGIC_RESULT
 {
-	HTTP_ERROR,
+	HTTP_ERROR = -4,
+	SERIAL_ERROR,
 	KINECT_ERROR,
 	IMAGE_PROCESSING_ERROR
 };
 
 //---------- ImageProcessor --------
 
-#define DEQUE_BUFFER			40
+#define DEQUE_BUFFER_SIZE		40
 #define TRACE_THICKNESS			4
 #define BGS_HISTORY_FRAMES		200
-#define ENABLE_SAVE_IMAGE		true
-#define ENABLE_SPELL_TRAINING	true
+#define ENABLE_SAVE_IMAGE		false
+#define ENABLE_SPELL_TRAINING	false
 #define TRAINED_SPELL_MODEL		"spellsModel.yml"
+#define TRAINER_IMAGE_WIN_SIZE	64
 
 #if ENABLE_SPELL_TRAINING
 #define GESTURE_TRAINER_IMAGE		"spellChars_64wide_grayscale.png"	//YOUR SPELL/GESTURE TRAINING IMAGE (STORED IN THE PROJECT FOLDER)
-#define TRAINER_IMAGE_WIN_SIZE		64
 #define NO_OF_IMAGES_PER_ELEMENT	20
 #endif
 
 //---------- httpService -------------
-
+#define SAVE_ACCESS_TOKEN true	
 #define HUE_ADDRESS (string)"http://<YOUR HUE IP ADDRESS>"
 #define HUE_USERNAME (string)"<YOUR HUE USERNAME>"
 #define SPOTIFY_CLIENT_AUTH_ENCODED (string)"<YOUR ENCODED AUTH STRING>"

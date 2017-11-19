@@ -17,7 +17,7 @@ int main()
 	m_imageProcessor.init(m_kinect.frameWidth, m_kinect.frameHeight);
 	hueLights.init(HUE_LIGHTS);
 	spotify.init(SPOTIFY);
-
+	
 #if ENABLE_SAVE_IMAGE
 	int fileNum = 0;
 #endif
@@ -32,7 +32,7 @@ int main()
 		Mat wandTraceFrame = m_imageProcessor.getWandTrace(m_kinect.grabLongIRFrame(), m_kinect.numPixels);
 		
 		imshow(windowName, wandTraceFrame);
-
+#if !ENABLE_SPELL_TRAINING && !ENABLE_SAVE_IMAGE
 		if (m_imageProcessor.checkTraceValidity())
 		{
 			cout << "Trace valid for spell rcognition" << endl;
@@ -60,6 +60,15 @@ int main()
 			}
 			m_imageProcessor.eraseTrace();
 		}
+#elif ENABLE_SPELL_TRAINING
+		cout << "Perform spell recognition training on " << GESTURE_TRAINER_IMAGE << "? (Y/N) : ";
+		char input;
+		cin >> input;
+		if (input == Y || input == y)
+		{
+			m_imageProcessor.spellRecognitionTrainer();
+		}
+#endif
 #endif
 
 		int keyPressed = waitKey(10);
@@ -71,11 +80,12 @@ int main()
 			cout << "Exiting";
 			break;
 		}
+#if DEBUG
+		
 		else if (keyPressed == 'u' || keyPressed == 'U')
 		{
 			updateSimblee();
 		}
-#if DEBUG
 		else if (keyPressed == 'l' || keyPressed == 'L')
 		{ 
 			lightsToggle();
@@ -96,18 +106,18 @@ int main()
 		{
 			serialPort->blindsConfig(keyPressed);
 		}
-#else
+#endif
 #if ENABLE_SAVE_IMAGE
-
-		else if(keyPressed == 'L')
+		else if(keyPressed == SPACE_KEY)
 		{
 			String fileName = "Image" + to_string(fileNum) + ".png";
 			imwrite(fileName, wandTraceFrame);
 			fileNum++;
+			m_imageProcessor.eraseTrace();
 		}
 #endif
-#endif
 	}
+
 #if !DEBUG
 	m_kinect.close();
 #endif

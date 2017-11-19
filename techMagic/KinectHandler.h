@@ -1,8 +1,7 @@
 #pragma once
 
-// Kinect Header files
 #include <Kinect.h>
-
+#include "config.h"
 
 class KinectHandler
 {

@@ -7,7 +7,6 @@
 #include"Serial.h"
 
 using namespace std;
-//using namespace std::chrono;
 
 #define ESC_KEY 27
 #define SPACE_KEY 32
@@ -17,12 +16,8 @@ KinectHandler m_kinect;
 ImageProcessor m_imageProcessor;
 httpService hueLights;
 httpService spotify;
-Serial* serialPort = new Serial("COM9");
+Serial* serialPort = new Serial("COM8");
 String windowName = "Wand Trace Window";
-//C++11 Style:***
-//steady_clock::time_point lastKeyPoint = steady_clock::now();
-//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-
 
 void musicToggle();
 void blindsToggle();

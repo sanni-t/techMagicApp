@@ -1,5 +1,5 @@
 #pragma once
-//Used to send HTTP REST requests to Hue lights and Spotify service
+/** Sends HTTP REST requests to Hue lights and Spotify service	**/
 
 #include"curl.h"
 #include"config.h"
@@ -42,7 +42,7 @@ private:
 #endif
 
 public:
-	void init(serviceName _service);
+	int init(serviceName _service);
 	bool isOn();
 	bool isPlaying();
 	void allOn();

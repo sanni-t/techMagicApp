@@ -1,8 +1,14 @@
+
+/** Sends HTTP REST requests to Hue lights and Spotify service using curl **/
+/** More info on libcurl: https://curl.haxx.se/libcurl/c/libcurl.html**/
+/** Philips Hue API documentation: https://developers.meethue.com/documentation/getting-started **/
+/** Spotify API tutorial: https://developer.spotify.com/web-api/tutorial/ **/
+
 #include"stdafx.h"
 #include"httpService.h"
 
 
-void httpService::init (serviceName _service)
+int httpService::init (serviceName _service)
 {
 	curl_global_init(CURL_GLOBAL_ALL);
 	_curl = curl_easy_init();
@@ -32,6 +38,8 @@ void httpService::init (serviceName _service)
 			//curl_easy_setopt(_curl, CURLOPT_VERBOSE, 1L);
 		}
 	}
+	else
+		return HTTP_ERROR;
 }
 
 size_t httpService::_responseWriter(void *contents, size_t size, size_t nmemb, void *userp)
@@ -50,6 +58,7 @@ bool httpService::isPlaying()
 	return _isPlaying;
 }
 
+/* fn: Turns Hue lights ON	*/
 void httpService::allOn()
 {
 	if (_curl)
@@ -60,6 +69,7 @@ void httpService::allOn()
 	}
 }
 
+/* fn: Turns Hue lights OFF	*/
 void httpService::allOff()
 {
 	if (_curl)
@@ -70,6 +80,9 @@ void httpService::allOff()
 	}
 }
 
+/* fn: Play Spotify playlist mentioned in config.h   */
+/*	   Also checks for invalid/ expired access token */
+/*	   and requests new one if required				 */
 void httpService::play()
 {
 	if (_curl)
@@ -107,6 +120,9 @@ void httpService::play()
 	}
 }
 
+/* fn: Pauses Spotify music						     */
+/*	   Also checks for invalid/ expired access token */
+/*	   and requests new one if required				 */
 void httpService::pause()
 {
 	if (_curl)
@@ -200,9 +216,14 @@ int httpService::_getAccessToken()
 			}
 		}
 	}
+	return -1;
 }
 
 #if SAVE_ACCESS_TOKEN
+
+/** If SAVE_ACCESS_TOKEN is enabled, the project saves new tokens to a file     **/
+/** That way, unexpired tokens that were previously issued can be reused when   **/
+/** the program is restarted. This is a good option to have during development  **/
 void httpService::_checkSavedAccessToken()
 {
 	_spotifyDataFile.open(SPOTIFY_TOKEN_FILE);

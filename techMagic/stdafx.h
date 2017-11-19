@@ -5,12 +5,6 @@
 
 #pragma once
 
-//#ifndef _WINDOWS_
-//#define WIN32_LEAN_AND_MEAN
-//#include<Windows.h>
-//#undef WIN32_LEAN_AND_MEAN
-//#endif
-
 #include <WinSock2.h>
 #include <Windows.h>
 #include "targetver.h"
@@ -32,6 +26,3 @@ inline void SafeRelease(Interface *& pInterfaceToRelease)
 		pInterfaceToRelease = NULL;
 	}
 }
-
-
-// TODO: reference additional headers your program requires here
