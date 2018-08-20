@@ -64,9 +64,18 @@ int main()
 		cout << "Perform spell recognition training on " << GESTURE_TRAINER_IMAGE << "? (Y/N) : ";
 		char input;
 		cin >> input;
-		if (input == Y || input == y)
+		if (input == 'Y' || input == 'y')
 		{
 			m_imageProcessor.spellRecognitionTrainer();
+			cout << "Spell training complete. Saved to file: " << TRAINED_SPELL_MODEL << endl;
+			cout << "Press any key to exit\n";
+			waitKey(0);
+			cout << "Exiting";
+			break;
+		}
+		else if (input == 'N' || input == 'n')
+		{
+			break;
 		}
 #endif
 #endif
@@ -111,7 +120,8 @@ int main()
 		else if(keyPressed == SPACE_KEY)
 		{
 			String fileName = "Image" + to_string(fileNum) + ".png";
-			imwrite(fileName, wandTraceFrame);
+			Mat traceToSave = m_imageProcessor.cropResizeTrace();
+			imwrite(fileName, traceToSave);
 			fileNum++;
 			m_imageProcessor.eraseTrace();
 		}

@@ -164,31 +164,7 @@ bool ImageProcessor::checkTraceValidity()
 	
 		if (_tracePoints.size() > DEQUE_BUFFER_SIZE - 5)
 		{
-			_traceUpperCorner = Point(_frameWidth, _frameHeight);
-			_traceLowerCorner = Point(0, 0);
-
-			//Draw a trace by connecting all the keypoints stored in the deque
-			//Also update lower and upper bounds of the trace
-			for (int i = 1; i < _tracePoints.size(); i++)
-			{
-				if (_tracePoints[i].size == -99.0)
-					continue;
-				Point pt1(_tracePoints[i - 1].pt.x, _tracePoints[i - 1].pt.y);
-				Point pt2(_tracePoints[i].pt.x, _tracePoints[i].pt.y);
-
-				//Min x,y = traceUpperCorner points
-				//Max x,y = traceLowerCorner points
-				if (pt1.x < _traceUpperCorner.x)
-					_traceUpperCorner.x = pt1.x;
-				if (pt1.x > _traceLowerCorner.x)
-					_traceLowerCorner.x = pt1.x;
-				if (pt1.y < _traceUpperCorner.y)
-					_traceUpperCorner.y = pt1.y;
-				if (pt1.y > _traceLowerCorner.y)
-					_traceLowerCorner.y = pt1.y;
-			}
-
-			long traceArea = (_traceLowerCorner.x - _traceUpperCorner.x) * (_traceLowerCorner.y - _traceUpperCorner.y);
+			long traceArea = _updateTraceCorners();
 			cout << "Trace area:" << traceArea << endl;
 			
 			if (traceArea > MIN_0_TRACE_AREA)
@@ -198,6 +174,36 @@ bool ImageProcessor::checkTraceValidity()
 		eraseTrace();
 	}
 	return false;
+}
+
+long ImageProcessor::_updateTraceCorners()
+{
+	_traceUpperCorner = Point(_frameWidth, _frameHeight);
+	_traceLowerCorner = Point(0, 0);
+
+	//Draw a trace by connecting all the keypoints stored in the deque
+	//Also update lower and upper bounds of the trace
+	for (int i = 1; i < _tracePoints.size(); i++)
+	{
+		if (_tracePoints[i].size == -99.0)
+			continue;
+		Point pt1(_tracePoints[i - 1].pt.x, _tracePoints[i - 1].pt.y);
+		Point pt2(_tracePoints[i].pt.x, _tracePoints[i].pt.y);
+
+		//Min x,y = traceUpperCorner points
+		//Max x,y = traceLowerCorner points
+		if (pt1.x < _traceUpperCorner.x)
+			_traceUpperCorner.x = pt1.x;
+		if (pt1.x > _traceLowerCorner.x)
+			_traceLowerCorner.x = pt1.x;
+		if (pt1.y < _traceUpperCorner.y)
+			_traceUpperCorner.y = pt1.y;
+		if (pt1.y > _traceLowerCorner.y)
+			_traceLowerCorner.y = pt1.y;
+	}
+
+	long traceArea = (_traceLowerCorner.x - _traceUpperCorner.x) * (_traceLowerCorner.y - _traceUpperCorner.y);
+	return traceArea;
 }
 
 void ImageProcessor::eraseTrace()
@@ -216,8 +222,14 @@ void ImageProcessor::eraseTrace()
 
 /* fn: Crop and resize the trace to 64x64 pixels */
 /* rn: The resized frame						 */	
-Mat ImageProcessor::_cropSaveTrace()
+Mat ImageProcessor::cropResizeTrace()
 {
+#if ENABLE_SAVE_IMAGE
+	if (_tracePoints.size() > 1)
+	{
+		_updateTraceCorners();
+	}
+#endif
 	if (_traceUpperCorner.x > CROPPED_IMG_MARGIN)
 		_traceUpperCorner.x -= CROPPED_IMG_MARGIN;
 	else
@@ -287,7 +299,7 @@ Mat ImageProcessor::_cropSaveTrace()
 /*		3:	<lights spell sumbol>									*/
 int ImageProcessor::recognizeSpell()
 {
-	Mat deskewedTrace = _deskew(_cropSaveTrace());
+	Mat deskewedTrace = _deskew(cropResizeTrace());
 	
 	vector<float> descriptors;
 	_hog.compute(deskewedTrace, descriptors);
@@ -321,7 +333,7 @@ void ImageProcessor::spellRecognitionTrainer()
 	_loadTrainLabel(GESTURE_TRAINER_IMAGE, trainCells, trainLabels);
 
 	vector<Mat> deskewedTrainCells;
-	_CreateDeskewedTrain(deskewedTrainCells, trainCells);
+	_CreateDeskewedTrainCells(deskewedTrainCells, trainCells);
 
 	std::vector<std::vector<float> > trainHOG;
 	std::vector<std::vector<float> > testHOG;
@@ -334,14 +346,7 @@ void ImageProcessor::spellRecognitionTrainer()
 	
 	_ConvertVectortoMatrix(trainHOG, trainMat);
 
-	//Mat testResponse;
 	_SVMtrain(trainMat, trainLabels);
-
-	//float count = 0;
-	//float accuracy = 0;
-	//SVMevaluate(testResponse, count, accuracy, testLabels);
-
-	//cout << "the accuracy is :" << accuracy << endl;
 }
 
 void ImageProcessor::_ConvertVectortoMatrix(vector<vector<float> > &inHOG, Mat &outMat)
@@ -372,7 +377,7 @@ void ImageProcessor::_loadTrainLabel(String pathName, vector<Mat> &trainCells, v
 
 	cout << "Image Count : " << ImgCount << endl;
 	float digitClassNumber = 0;
-
+	
 	for (int z = 0;z<ImgCount;z++) {
 		if (z % NO_OF_IMAGES_PER_ELEMENT == 0 && z != 0) {	
 			digitClassNumber = digitClassNumber + 1;
@@ -381,7 +386,7 @@ void ImageProcessor::_loadTrainLabel(String pathName, vector<Mat> &trainCells, v
 	}
 }
 
-void ImageProcessor::_CreateDeskewedTrain(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells) {
+void ImageProcessor::_CreateDeskewedTrainCells(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells) {
 
 	for (int i = 0;i<trainCells.size();i++) {
 
@@ -420,7 +425,7 @@ void  ImageProcessor::_SVMtrain(Mat &trainMat, vector<int> &trainLabels) {
 	Ptr<TrainData> td = TrainData::create(trainMat, ROW_SAMPLE, trainLabels);
 	svm->train(td);
 	//	svm->trainAuto(td);
-	svm->save("model4.yml");
+	svm->save(TRAINED_SPELL_MODEL);
 	_getSVMParams(svm);
 }
 
@@ -440,7 +445,7 @@ void  ImageProcessor::_SVMtrain(Mat &trainMat, vector<int> &trainLabels) {
 
 Mat ImageProcessor::_deskew(Mat& img)
 {
-	int SZ = 20;
+	int SZ = TRAINER_IMAGE_WIN_SIZE;
 	float affineFlags = WARP_INVERSE_MAP | INTER_LINEAR;
 
 	Moments m = moments(img);
