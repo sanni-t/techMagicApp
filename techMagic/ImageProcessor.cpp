@@ -74,8 +74,10 @@ std::vector<KeyPoint> ImageProcessor::_wandDetect(ushort frameData[], int numPix
 	{
 		uint8_t thisPixelIntensity = (uint8_t)(frameData[i] >> 8);
 		cameraFrame.at<unsigned char>(i) = thisPixelIntensity;
+#if ENABLE_SAVE_IMAGE
 		//Clear frame
-		//wandMoveTracingFrame.at<unsigned char>(i) = 0;
+		_wandMoveTracingFrame.at<unsigned char>(i) = 0;
+#endif
 	}
 	if (cameraFrame.empty())
 		return keypoints;
@@ -118,8 +120,25 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 				_tracePoints.pop_front();
 
 			_tracePoints.push_back(_blobKeypoints[0]);
-			//Point pt2(tracePoints[tracePoints.size() - 1].pt.x, tracePoints[tracePoints.size() - 1].pt.y);
+#if ENABLE_SAVE_IMAGE
+			//Draw a continuous trace without relying on trace validity check to erase traces
+			//If no keypoints detected, start emptying the deque, one element at a time
+			if (_blobKeypoints.size() == 0 && _tracePoints.size() > 0)
+			{
+				_tracePoints.pop_front();
+			}
+			//Draw a trace by connecting all the keypoints stored in the deque
+			for (int i = 1; i < _tracePoints.size(); i++)
+			{
+				if (_tracePoints[i].size == -99.0)
+					continue;
+				Point pt1(_tracePoints[i - 1].pt.x, _tracePoints[i - 1].pt.y);
+				Point pt2(_tracePoints[i].pt.x, _tracePoints[i].pt.y);
+				line(_wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
+			}
+#else
 			line(_wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
+#endif
 		}
 		else
 		{

@@ -47,12 +47,12 @@ private:
 	double _distance(Point& p, Point& q);
 	vector<KeyPoint> _wandDetect(ushort[], int _numpixels);
 	void _ConvertVectortoMatrix(vector<float> inHOG, Mat &outMat);
-	Mat _cropSaveTrace();
 	Mat _deskew(Mat& img);
+	long _updateTraceCorners();
 
 #if ENABLE_SPELL_TRAINING
 	void _loadTrainLabel(String pathName, vector<Mat> &trainCells, vector<int> &trainLabels);
-	void _CreateDeskewedTrain(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells);
+	void _CreateDeskewedTrainCells(vector<Mat> &deskewedTrainCells, vector<Mat> &trainCells);
 	void _CreateTrainHOG(vector<vector<float> > &trainHOG, vector<Mat> &deskewedTrainCells);
 	void _ConvertVectortoMatrix(vector<vector<float> > &inHOG, Mat &outMat);
 	void _getSVMParams(SVM *svm);
@@ -63,6 +63,7 @@ private:
 public:
 	void init(int frameWidth, int frameHeight);
 	Mat getWandTrace(ushort[], int _numpixels);
+	Mat cropResizeTrace();
 #if ENABLE_SPELL_TRAINING
 	void spellRecognitionTrainer();
 #endif
