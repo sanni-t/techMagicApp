@@ -110,35 +110,18 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 			std::chrono::duration<double> elapsed = currentKeypointTime - _lastKeypointTime;
 			Point pt1(_tracePoints[_tracePoints.size() - 1].pt.x, _tracePoints[_tracePoints.size() - 1].pt.y);
 			Point pt2(_blobKeypoints[0].pt.x, _blobKeypoints[0].pt.y);
+#if !ENABLE_SAVE_IMAGE
 
 			if (_distance(pt1,pt2) / elapsed.count() >= MAX_TRACE_SPEED)
 			{
 				return _wandMoveTracingFrame;
 			}
-
+			line(_wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
+#endif
 			if (_tracePoints.size() >= DEQUE_BUFFER_SIZE)
 				_tracePoints.pop_front();
 
 			_tracePoints.push_back(_blobKeypoints[0]);
-#if ENABLE_SAVE_IMAGE
-			//Draw a continuous trace without relying on trace validity check to erase traces
-			//If no keypoints detected, start emptying the deque, one element at a time
-			if (_blobKeypoints.size() == 0 && _tracePoints.size() > 0)
-			{
-				_tracePoints.pop_front();
-			}
-			//Draw a trace by connecting all the keypoints stored in the deque
-			for (int i = 1; i < _tracePoints.size(); i++)
-			{
-				if (_tracePoints[i].size == -99.0)
-					continue;
-				Point pt1(_tracePoints[i - 1].pt.x, _tracePoints[i - 1].pt.y);
-				Point pt2(_tracePoints[i].pt.x, _tracePoints[i].pt.y);
-				line(_wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
-			}
-#else
-			line(_wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
-#endif
 		}
 		else
 		{
@@ -146,7 +129,25 @@ Mat ImageProcessor::getWandTrace(ushort frameData[], int numpixels)
 			_tracePoints.push_back(_blobKeypoints[0]);
 		}
 	}
-	
+#if ENABLE_SAVE_IMAGE
+	else
+	{
+		//If no keypoints detected, start emptying the deque, one element at a time
+		if (_tracePoints.size() > 0)
+		{
+			_tracePoints.pop_front();
+		}
+	}
+	//Draw a trace by connecting all the keypoints stored in the deque
+	for (int i = 1; i < _tracePoints.size(); i++)
+	{
+		if (_tracePoints[i].size == -99.0)
+			continue;
+		Point pt1(_tracePoints[i - 1].pt.x, _tracePoints[i - 1].pt.y);
+		Point pt2(_tracePoints[i].pt.x, _tracePoints[i].pt.y);
+		line(_wandMoveTracingFrame, pt1, pt2, Scalar(255), TRACE_THICKNESS);
+	}
+#endif
 	return _wandMoveTracingFrame;
 }
 
@@ -301,7 +302,7 @@ Mat ImageProcessor::cropResizeTrace()
 			_finalTraceCell.at<unsigned char>(i,j) = resizedCroppedTrace.at<unsigned char>(i,j);
 		}
 	}
-	cout << "Done copying to 64 x 64";
+	cout << "Done copying to 64 x 64" << endl;
 	imshow("Debug window", _finalTraceCell);
 	//imwrite("spellTraceCell.png", _finalTraceCell);
 	return _finalTraceCell;

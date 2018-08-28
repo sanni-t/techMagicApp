@@ -15,8 +15,8 @@ private:
 	IFrameDescription* _irFrameDescription;
 
 public:
-	int frameWidth;
-	int frameHeight;
+	int frameWidth = 512;	//init to default
+	int frameHeight = 424;
 	UINT numPixels;
 	HRESULT init();
 	USHORT * grabLongIRFrame();

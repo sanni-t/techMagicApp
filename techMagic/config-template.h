@@ -1,6 +1,6 @@
 #pragma once
 
-#define DEBUG true
+#define DEBUG false
 
 enum MAGIC_RESULT
 {
@@ -15,8 +15,10 @@ enum MAGIC_RESULT
 #define DEQUE_BUFFER_SIZE		40	// Increase this value when saving imges for spell training
 #define TRACE_THICKNESS			4
 #define BGS_HISTORY_FRAMES		200
-#define ENABLE_SAVE_IMAGE		false	//Do not turn on ENABLE_SAVE_IMAGE when ENABLE_SPELL_TRAINING is true & vice versa
-#define ENABLE_SPELL_TRAINING	false
+#define ENABLE_SPELL_TRAINING	false	//Do not turn on ENABLE_SAVE_IMAGE when ENABLE_SPELL_TRAINING is true & vice versa
+#if !ENABLE_SPELL_TRAINING
+#define ENABLE_SAVE_IMAGE		false
+#endif
 #define TRAINED_SPELL_MODEL		"spellsModel.yml"
 #define TRAINER_IMAGE_WIN_SIZE	64
 
